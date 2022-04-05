@@ -19,6 +19,7 @@ def _work(process_id, model, dataset, args):
     n_gpus = torch.cuda.device_count()
     data_loader = DataLoader(databin, shuffle=False, num_workers=args.num_workers // n_gpus, pin_memory=False)
 
+    #Generate the cams for each image
     with torch.no_grad(), cuda.device(process_id):
 
         model.cuda()
@@ -60,12 +61,15 @@ def _work(process_id, model, dataset, args):
 
 
 def run(args):
+
+    #Load in the CAM model
     model = getattr(importlib.import_module(args.cam_network), 'CAM')()
     model.load_state_dict(torch.load(args.cam_weights_name + '.pth'), strict=True)
     model.eval()
 
     n_gpus = torch.cuda.device_count()
 
+    #Load in the VOC12 dataset
     dataset = voc12.dataloader.VOC12ClassificationDatasetMSF(args.train_list,
                                                              voc12_root=args.voc12_root, scales=args.cam_scales)
     dataset = torchutils.split_dataset(dataset, n_gpus)
