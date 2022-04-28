@@ -1,5 +1,6 @@
 
 import numpy as np
+import sys
 import os
 from chainercv.datasets import VOCSemanticSegmentationDataset
 from chainercv.evaluations import calc_semantic_segmentation_confusion
@@ -25,7 +26,6 @@ def run(args):
     fn = 1. - resj / denominator
     iou = gtjresj / denominator
 
-    print(fp[0], fn[0])
-    print(np.mean(fp[1:]), np.mean(fn[1:]))
-
-    print({'iou': iou, 'miou': np.nanmean(iou)})
+    sys.stderr.write(str(fp[0]) + str(fn[0]))
+    sys.stderr.write(str(np.mean(fp[1:])) + ',' + str(np.mean(fn[1:])))
+    sys.stderr.write('iou: ' + str(iou) + ' miou: ' + str(np.nanmean(iou)))

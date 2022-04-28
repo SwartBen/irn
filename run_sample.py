@@ -4,12 +4,16 @@ import sys
 
 from misc import pyutils
 
+#export CUDA_DEVICE_ORDER=PCI_BUS_ID
+#export CUDA_VISIBLE_DEVICES=0,2
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"]="0,1,2"  # specify which GPU(s) to be used
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-
     # Environment
-    parser.add_argument("--num_workers", default=os.cpu_count()//2, type=int)
-    parser.add_argument("--voc12_root", default="VOCdevkit/VOC2012/JPEGImages", type=str,
+    parser.add_argument("--num_workers", default=10, type=int)
+    parser.add_argument("--voc12_root", default="/home/bswart/data/VOCdevkit/VOC2012", type=str,
                         help="Path to VOC 2012 Devkit, must contain ./JPEGImages as subdirectory.")
 
     # Dataset
@@ -52,20 +56,20 @@ if __name__ == '__main__':
     parser.add_argument("--sem_seg_bg_thres", default=0.25)
 
     # Output Path
-    parser.add_argument("--log_name", default="sample_train_eval", type=str)
-    parser.add_argument("--cam_weights_name", default="sess/res50_cam.pth", type=str)
-    parser.add_argument("--irn_weights_name", default="sess/res50_irn.pth", type=str)
-    parser.add_argument("--cam_out_dir", default="result/cam", type=str)
-    parser.add_argument("--ir_label_out_dir", default="result/ir_label", type=str)
-    parser.add_argument("--sem_seg_out_dir", default="result/sem_seg", type=str)
-    parser.add_argument("--ins_seg_out_dir", default="result/ins_seg", type=str)
+    parser.add_argument("--log_name", default="/home/bswart/data/result_orig/sample_train_eval", type=str)
+    parser.add_argument("--cam_weights_name", default="/home/bswart/data/result_orig/sess/res50_cam.pth", type=str)
+    parser.add_argument("--irn_weights_name", default="/home/bswart/data/result_orig/sess/res50_irn.pth", type=str)
+    parser.add_argument("--cam_out_dir", default="/home/bswart/data/result_orig/cam", type=str)
+    parser.add_argument("--ir_label_out_dir", default="/home/bswart/data/result_orig/ir_label", type=str)
+    parser.add_argument("--sem_seg_out_dir", default="/home/bswart/data/result_orig/sem_seg", type=str)
+    parser.add_argument("--ins_seg_out_dir", default="/home/bswart/data/result_orig/ins_seg", type=str)
 
     # Step
-    parser.add_argument("--train_cam_pass", default=True)
-    parser.add_argument("--make_cam_pass", default=True)
-    parser.add_argument("--eval_cam_pass", default=True)
-    parser.add_argument("--cam_to_ir_label_pass", default=True)
-    parser.add_argument("--train_irn_pass", default=True)
+    parser.add_argument("--train_cam_pass", default=False)
+    parser.add_argument("--make_cam_pass", default=False)
+    parser.add_argument("--eval_cam_pass", default=False)
+    parser.add_argument("--cam_to_ir_label_pass", default=False)
+    parser.add_argument("--train_irn_pass", default=False)
     parser.add_argument("--make_ins_seg_pass", default=True)
     parser.add_argument("--eval_ins_seg_pass", default=True)
     parser.add_argument("--make_sem_seg_pass", default=True)
@@ -73,7 +77,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    os.makedirs("sess", exist_ok=True)
+    os.makedirs("/home/bswart/data/result_orig/sess", exist_ok=True)
     os.makedirs(args.cam_out_dir, exist_ok=True)
     os.makedirs(args.ir_label_out_dir, exist_ok=True)
     os.makedirs(args.sem_seg_out_dir, exist_ok=True)

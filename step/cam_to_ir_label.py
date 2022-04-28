@@ -2,6 +2,7 @@
 import os
 import numpy as np
 import imageio
+import sys
 
 from torch import multiprocessing
 from torch.utils.data import DataLoader
@@ -44,12 +45,12 @@ def _work(process_id, infer_dataset, args):
 
 
         if process_id == args.num_workers - 1 and iter % (len(databin) // 20) == 0:
-            print("%d " % ((5 * iter + 1) // (len(databin) // 20)), end='')
+            sys.stderr.write("%d " % ((5 * iter + 1) // (len(databin) // 20)))
 
 def run(args):
     dataset = voc12.dataloader.VOC12ImageDataset(args.train_list, voc12_root=args.voc12_root, img_normal=None, to_torch=False)
     dataset = torchutils.split_dataset(dataset, args.num_workers)
 
-    print('[ ', end='')
+    sys.stderr.write('[ ')
     multiprocessing.spawn(_work, nprocs=args.num_workers, args=(dataset, args), join=True)
-    print(']')
+    sys.stderr.write(']')

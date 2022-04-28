@@ -1,5 +1,6 @@
 
 import torch
+import sys
 from torch.backends import cudnn
 cudnn.enabled = True
 from torch.utils.data import DataLoader
@@ -44,7 +45,8 @@ def run(args):
 
     for ep in range(args.irn_num_epoches):
 
-        print('Epoch %d/%d' % (ep+1, args.irn_num_epoches))
+        sys.stderr.write('Epoch %d/%d' % (ep+1, args.irn_num_epoches))
+        sys.stderr.write('\n')
 
         for iter, pack in enumerate(train_data_loader):
 
@@ -75,12 +77,18 @@ def run(args):
             if (optimizer.global_step - 1) % 50 == 0:
                 timer.update_progress(optimizer.global_step / max_step)
 
-                print('step:%5d/%5d' % (optimizer.global_step - 1, max_step),
-                      'loss:%.4f %.4f %.4f %.4f' % (
-                      avg_meter.pop('loss1'), avg_meter.pop('loss2'), avg_meter.pop('loss3'), avg_meter.pop('loss4')),
-                      'imps:%.1f' % ((iter + 1) * args.irn_batch_size / timer.get_stage_elapsed()),
-                      'lr: %.4f' % (optimizer.param_groups[0]['lr']),
-                      'etc:%s' % (timer.str_estimated_complete()), flush=True)
+                sys.stderr.write('step:%5d/%5d ' % (optimizer.global_step - 1, max_step))
+                sys.stderr.write('loss:%.4f ' % (avg_meter.pop('loss1')))
+                sys.stderr.write('%.4f ' % avg_meter.pop('loss2'))
+                sys.stderr.write(' ')
+                sys.stderr.write('%.4f ' % avg_meter.pop('loss3'))
+                sys.stderr.write(' ')
+                sys.stderr.write('%.4f ' % avg_meter.pop('loss4'))
+                sys.stderr.write(' ')
+                sys.stderr.write('imps:%.1f ' % ((iter + 1) * args.irn_batch_size / timer.get_stage_elapsed()))
+                sys.stderr.write('lr: %.4f ' % (optimizer.param_groups[0]['lr']))
+                sys.stderr.write('etc:%s ' % (timer.str_estimated_complete()))
+                sys.stderr.write('\n')
         else:
             timer.reset_stage()
 
@@ -92,7 +100,7 @@ def run(args):
                                    shuffle=False, num_workers=args.num_workers, pin_memory=True, drop_last=True)
 
     model.eval()
-    print('Analyzing displacements mean ... ', end='')
+    sys.stderr.write('Analyzing displacements mean ... ')
 
     dp_mean_list = []
 
@@ -105,7 +113,7 @@ def run(args):
             dp_mean_list.append(torch.mean(dp, dim=(0, 2, 3)).cpu())
 
         model.module.mean_shift.running_mean = torch.mean(torch.stack(dp_mean_list), dim=0)
-    print('done.')
+    sys.stderr.write('done.\n')
 
     torch.save(model.module.state_dict(), args.irn_weights_name)
     torch.cuda.empty_cache()

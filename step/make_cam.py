@@ -1,4 +1,5 @@
 import torch
+import sys
 from torch import multiprocessing, cuda
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
@@ -57,7 +58,7 @@ def _work(process_id, model, dataset, args):
                     {"keys": valid_cat, "cam": strided_cam.cpu(), "high_res": highres_cam.cpu().numpy()})
 
             if process_id == n_gpus - 1 and iter % (len(databin) // 20) == 0:
-                print("%d " % ((5*iter+1)//(len(databin) // 20)), end='')
+                sys.stderr.write("%d " % ((5*iter+1)//(len(databin) // 20)))
 
 
 def run(args):
@@ -74,8 +75,8 @@ def run(args):
                                                              voc12_root=args.voc12_root, scales=args.cam_scales)
     dataset = torchutils.split_dataset(dataset, n_gpus)
 
-    print('[ ', end='')
+    sys.stderr.write('[ ')
     multiprocessing.spawn(_work, nprocs=n_gpus, args=(model, dataset, args), join=True)
-    print(']')
+    sys.stderr.write(']')
 
     torch.cuda.empty_cache()

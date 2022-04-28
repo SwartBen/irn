@@ -1,4 +1,5 @@
 import torch
+import sys
 from torch import multiprocessing, cuda
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
@@ -9,6 +10,7 @@ import importlib
 import os
 
 import skimage
+import skimage.measure
 import voc12.dataloader
 from misc import torchutils, imutils, pyutils, indexing
 
@@ -152,7 +154,7 @@ def _work(process_id, model, dataset, args):
             np.save(os.path.join(args.ins_seg_out_dir, img_name + '.npy'), detected)
 
             if process_id == n_gpus - 1 and iter % (len(databin) // 20) == 0:
-                print("%d " % ((5*iter+1)//(len(databin) // 20)), end='')
+                sys.stderr.write("%d " % ((5*iter+1)//(len(databin) // 20)))
 
 
 def run(args):
@@ -167,6 +169,6 @@ def run(args):
                                                              scales=(1.0,))
     dataset = torchutils.split_dataset(dataset, n_gpus)
 
-    print("[ ", end='')
+    sys.stderr.write("[ ")
     multiprocessing.spawn(_work, nprocs=n_gpus, args=(model, dataset, args), join=True)
-    print("]")
+    sys.stderr.write("]")
