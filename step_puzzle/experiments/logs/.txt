@@ -1,0 +1,29 @@
+[i] 
+
+[i] mean values is [0.485, 0.456, 0.406]
+[i] std values is [0.229, 0.224, 0.225]
+[i] The number of class is 20
+[i] train_transform is Compose(
+    <tools.ai.augment_utils.RandomResize object at 0x7f3dd7dcdf98>
+    <tools.ai.augment_utils.RandomHorizontalFlip object at 0x7f3dd7dcdf60>
+    <tools.ai.augment_utils.Normalize object at 0x7f3dd7dcdf28>
+    <tools.ai.augment_utils.RandomCrop object at 0x7f3dd7dcdfd0>
+    <tools.ai.augment_utils.Transpose object at 0x7f3dd7ddb208>
+)
+[i] test_transform is Compose(
+    <tools.ai.augment_utils.Normalize_For_Segmentation object at 0x7f3dd7ddb1d0>
+    <tools.ai.augment_utils.Top_Left_Crop_For_Segmentation object at 0x7f3dd7ddb240>
+    <tools.ai.augment_utils.Transpose_For_Segmentation object at 0x7f3dd7ddb278>
+)
+
+[i] log_iteration : 66
+[i] val_iteration : 661
+[i] max_iteration : 3,305
+[i] Architecture is resnet50
+[i] Total Params: 23.55M
+
+[i] the number of gpu : 3
+[i] The number of pretrained weights : 106
+[i] The number of pretrained bias : 53
+[i] The number of scratched weights : 1
+[i] The number of scratched bias : 0
