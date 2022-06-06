@@ -10,7 +10,7 @@ os.environ["CUDA_VISIBLE_DEVICES"]="0,1,2"  # specify which GPU(s) to be used
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # Environment
-    parser.add_argument("--num_workers", default=8, type=int)
+    parser.add_argument("--num_workers", default=10, type=int)
     parser.add_argument("--voc12_root", default="/home/bswart/data/VOCdevkit/VOC2012", type=str,
                         help="Path to VOC 2012 Devkit, must contain ./JPEGImages as subdirectory.")
 
@@ -54,17 +54,17 @@ if __name__ == '__main__':
     parser.add_argument("--sem_seg_bg_thres", default=0.25)
 
     # Output Path
-    parser.add_argument("--log_name", default="/home/bswart/data/result_coljitter/sample_train_eval", type=str)
-    parser.add_argument("--cam_weights_name", default="/home/bswart/data/result_coljitter/sess/res50_cam.pth", type=str)
-    parser.add_argument("--irn_weights_name", default="/home/bswart/data/result_coljitter/sess/res50_irn.pth", type=str)
-    parser.add_argument("--cam_out_dir", default="/home/bswart/data/result_coljitter/cam", type=str)
-    parser.add_argument("--ir_label_out_dir", default="/home/bswart/data/result_coljitter/ir_label", type=str)
-    parser.add_argument("--sem_seg_out_dir", default="/home/bswart/data/result_coljitter/sem_seg", type=str)
-    parser.add_argument("--ins_seg_out_dir", default="/home/bswart/data/result_coljitter/ins_seg", type=str)
+    parser.add_argument("--log_name", default="/home/bswart/data/result_puzzle/sample_train_eval", type=str)
+    parser.add_argument("--cam_weights_name", default="/home/bswart/data/result_puzzle/sess/res50_cam.pth", type=str)
+    parser.add_argument("--irn_weights_name", default="/home/bswart/data/result_puzzle/sess/res50_irn.pth", type=str)
+    parser.add_argument("--cam_out_dir", default="/home/bswart/data/result_puzzle/cam", type=str)
+    parser.add_argument("--ir_label_out_dir", default="/home/bswart/data/result_puzzle/ir_label", type=str)
+    parser.add_argument("--sem_seg_out_dir", default="/home/bswart/data/result_puzzle/sem_seg", type=str)
+    parser.add_argument("--ins_seg_out_dir", default="/home/bswart/data/result_puzzle/ins_seg", type=str)
 
     # Step
-    parser.add_argument("--train_cam_pass", default=True)
-    parser.add_argument("--make_cam_pass", default=True)
+    parser.add_argument("--train_cam_pass", default=False)
+    parser.add_argument("--make_cam_pass", default=False)
     parser.add_argument("--eval_cam_pass", default=True)
     parser.add_argument("--cam_to_ir_label_pass", default=False)
     parser.add_argument("--train_irn_pass", default=False)
@@ -75,7 +75,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    os.makedirs("/home/bswart/data/result_coljitter/sess", exist_ok=True)
+    os.makedirs("/home/bswart/data/result_puzzle/sess", exist_ok=True)
     os.makedirs(args.cam_out_dir, exist_ok=True)
     os.makedirs(args.ir_label_out_dir, exist_ok=True)
     os.makedirs(args.sem_seg_out_dir, exist_ok=True)
@@ -85,16 +85,16 @@ if __name__ == '__main__':
     #print(vars(args))
 
     if args.train_cam_pass is True:
-        import step.train_cam
+        import step_puzzle.train_cam
 
-        timer = pyutils.Timer('step.train_cam:')
-        step.train_cam.run(args)
+        timer = pyutils.Timer('step_puzzle.train_cam:')
+        step_puzzle.train_cam.run(args)
 
     if args.make_cam_pass is True:
-        import step.make_cam
+        import step_puzzle.make_cam
 
-        timer = pyutils.Timer('step.make_cam:')
-        step.make_cam.run(args)
+        timer = pyutils.Timer('step_puzzle.make_cam:')
+        step_puzzle.make_cam.run(args)
 
     if args.eval_cam_pass is True:
         import step.eval_cam

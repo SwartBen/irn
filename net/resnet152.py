@@ -3,9 +3,7 @@ import torch.nn.functional as F
 import torch.utils.model_zoo as model_zoo
 
 model_urls = {
-    'resnet50': 'https://download.pytorch.org/models/resnet50-19c8e357.pth',
-    'resnet101': 'https://download.pytorch.org/models/resnet101-5d3b4d8f.pth',
-    'resnet152': 'https://download.pytorch.org/models/resnet152-b121ed2d.pth'
+    'resnet152': 'https://download.pytorch.org/models/resnet152-394f9c45.pth'
 }
 
 class FixedBatchNorm(nn.BatchNorm2d):
@@ -62,9 +60,6 @@ class ResNet(nn.Module):
                                bias=False)
         self.bn1 = FixedBatchNorm(64)
         self.relu = nn.ReLU(inplace=True)
-
-        # self.maxpool = nn.AdaptiveMaxPool2d((1, 1)) - does not work well
-        # self.maxpool = nn.MaxPool2d(kernel_size=4, stride=2, padding=1)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.layer1 = self._make_layer(block, 64, layers[0], stride=1, dilation=dilations[0])
         self.layer2 = self._make_layer(block, 128, layers[1], stride=strides[1], dilation=dilations[1])
@@ -109,31 +104,12 @@ class ResNet(nn.Module):
 
         return x
 
+
 def resnet152(pretrained=True, **kwargs):
-    print("Resnet152")
-    model = ResNet(Bottleneck, [3, 8, 36, 3], **kwargs)
+
+    model = ResNet(Bottleneck, [3, 4, 36, 3], **kwargs)
     if pretrained:
         state_dict = model_zoo.load_url(model_urls['resnet152'])
-        state_dict.pop('fc.weight')
-        state_dict.pop('fc.bias')
-        model.load_state_dict(state_dict)
-    return model
-
-def resnet101(pretrained=True, **kwargs):
-    print("Resnet101")
-    model = ResNet(Bottleneck, [3, 4, 23, 3], **kwargs)
-    if pretrained:
-        state_dict = model_zoo.load_url(model_urls['resnet101'])
-        state_dict.pop('fc.weight')
-        state_dict.pop('fc.bias')
-        model.load_state_dict(state_dict)
-    return model
-
-def resnet50(pretrained=True, **kwargs):
-    print("Resnet50")
-    model = ResNet(Bottleneck, [3, 4, 6, 3], **kwargs)
-    if pretrained:
-        state_dict = model_zoo.load_url(model_urls['resnet50'])
         state_dict.pop('fc.weight')
         state_dict.pop('fc.bias')
         model.load_state_dict(state_dict)

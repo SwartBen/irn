@@ -1,12 +1,23 @@
+from net.resnet import ResNet, Bottleneck
+
+import math
+import torch
 import torch.nn as nn
+from net.splat import SplAtConv2d
 import torch.nn.functional as F
 import torch.utils.model_zoo as model_zoo
 
 model_urls = {
-    'resnet50': 'https://download.pytorch.org/models/resnet50-19c8e357.pth',
-    'resnet101': 'https://download.pytorch.org/models/resnet101-5d3b4d8f.pth',
-    'resnet152': 'https://download.pytorch.org/models/resnet152-b121ed2d.pth'
+    'resnest50': 'https://github.com/zhanghang1989/ResNeSt/releases/download/weights_step1/resnest50-528c19ca.pth',
+    'resnest269': 'https://github.com/zhanghang1989/ResNeSt/releases/download/weights_step1/resnest269-0cc87c48.pth',
+    'resnet50': 'https://download.pytorch.org/models/resnet50-19c8e357.pth'
 }
+class GlobalAvgPool2d(nn.Module):
+    def __init__(self):
+        super(GlobalAvgPool2d, self).__init__()
+
+    def forward(self, inputs):
+        return nn.functional.adaptive_avg_pool2d(inputs, 1).view(inputs.size(0), -1)
 
 class FixedBatchNorm(nn.BatchNorm2d):
     def forward(self, input):
@@ -15,20 +26,33 @@ class FixedBatchNorm(nn.BatchNorm2d):
 
 class Bottleneck(nn.Module):
     expansion = 4
-
     def __init__(self, inplanes, planes, stride=1, downsample=None, dilation=1):
         super(Bottleneck, self).__init__()
+
         self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, bias=False)
         self.bn1 = FixedBatchNorm(planes)
+
+        #self.conv2 = SplAtConv2d(
+        #    planes, planes, kernel_size=3,
+        #    stride=1, padding=1,
+        #    dilation=1, groups=1, bias=False,
+        #    radix=1, rectify=False,
+        #    rectify_avg=False,
+        #    norm_layer=None,
+        #    dropblock_prob=0.0)
+
         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride,
                                padding=dilation, bias=False, dilation=dilation)
+
         self.bn2 = FixedBatchNorm(planes)
+
         self.conv3 = nn.Conv2d(planes, planes * 4, kernel_size=1, bias=False)
         self.bn3 = FixedBatchNorm(planes * 4)
+
         self.relu = nn.ReLU(inplace=True)
         self.downsample = downsample
-        self.stride = stride
         self.dilation = dilation
+        self.stride = stride
 
     def forward(self, x):
         residual = x
@@ -52,10 +76,10 @@ class Bottleneck(nn.Module):
 
         return out
 
-
 class ResNet(nn.Module):
 
     def __init__(self, block, layers, strides=(2, 2, 2, 2), dilations=(1, 1, 1, 1)):
+
         self.inplanes = 64
         super(ResNet, self).__init__()
         self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=strides[0], padding=3,
@@ -109,32 +133,31 @@ class ResNet(nn.Module):
 
         return x
 
-def resnet152(pretrained=True, **kwargs):
-    print("Resnet152")
-    model = ResNet(Bottleneck, [3, 8, 36, 3], **kwargs)
-    if pretrained:
-        state_dict = model_zoo.load_url(model_urls['resnet152'])
-        state_dict.pop('fc.weight')
-        state_dict.pop('fc.bias')
-        model.load_state_dict(state_dict)
-    return model
-
-def resnet101(pretrained=True, **kwargs):
-    print("Resnet101")
-    model = ResNet(Bottleneck, [3, 4, 23, 3], **kwargs)
-    if pretrained:
-        state_dict = model_zoo.load_url(model_urls['resnet101'])
-        state_dict.pop('fc.weight')
-        state_dict.pop('fc.bias')
-        model.load_state_dict(state_dict)
-    return model
-
-def resnet50(pretrained=True, **kwargs):
-    print("Resnet50")
+def resnest50(pretrained=False, **kwargs):
     model = ResNet(Bottleneck, [3, 4, 6, 3], **kwargs)
+
     if pretrained:
-        state_dict = model_zoo.load_url(model_urls['resnet50'])
+        #model.load_state_dict(torch.hub.load_state_dict_from_url(
+        #    model_urls['resnest50'], progress=True, check_hash=True), strict=False)
+        try:
+            state_dict = model_zoo.load_url(model_urls['resnest50'])
+        except RuntimeError as e:
+            print('Ignoring "' + str(e) + '"')
+
         state_dict.pop('fc.weight')
         state_dict.pop('fc.bias')
+
         model.load_state_dict(state_dict)
+
+    return model
+
+def resnest269(pretrained=True, **kwargs):
+    model = ResNet(Bottleneck, [3, 30, 48, 8], **kwargs)
+
+    if pretrained:
+        model.load_state_dict(torch.hub.load_state_dict_from_url(
+            model_urls['resnest269'], progress=True, check_hash=True))
+        #del model.avgpool
+        #del model.fc
+
     return model

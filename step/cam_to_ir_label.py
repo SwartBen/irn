@@ -27,7 +27,7 @@ def _work(process_id, infer_dataset, args):
         # 1. find confident fg & bg
         fg_conf_cam = np.pad(cams, ((1, 0), (0, 0), (0, 0)), mode='constant', constant_values=args.conf_fg_thres)
         fg_conf_cam = np.argmax(fg_conf_cam, axis=0)
-        pred = imutils.crf_inference_label(img, fg_conf_cam, n_labels=keys.shape[0])
+        pred = imutils.crf_inference_label(img, fg_conf_cam, n_labels=keys.shape[0]) #larger object better
         fg_conf = keys[pred]
 
         bg_conf_cam = np.pad(cams, ((1, 0), (0, 0), (0, 0)), mode='constant', constant_values=args.conf_bg_thres)

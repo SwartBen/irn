@@ -1,4 +1,3 @@
-
 import numpy as np
 import torch
 from torch.utils.data import Dataset
@@ -110,7 +109,7 @@ class VOC12ImageDataset(Dataset):
 
     def __init__(self, img_name_list_path, voc12_root,
                  resize_long=None, rescale=None, img_normal=TorchvisionNormalize(), hor_flip=False,
-                 crop_size=None, crop_method=None, to_torch=True):
+                 crop_size=None, crop_method=None, to_torch=True, colorjitter=False):
 
         self.img_name_list = load_img_name_list(img_name_list_path)
         self.voc12_root = voc12_root
@@ -122,6 +121,7 @@ class VOC12ImageDataset(Dataset):
         self.hor_flip = hor_flip
         self.crop_method = crop_method
         self.to_torch = to_torch
+        self.colorjitter = colorjitter
 
     def __len__(self):
         return len(self.img_name_list)
@@ -150,6 +150,10 @@ class VOC12ImageDataset(Dataset):
             else:
                 img = imutils.top_left_crop(img, self.crop_size, 0)
 
+        if self.colorjitter:
+            print('Color Jitter')
+            img = torch.transforms.ColorJitter(brightness=0.5, contrast=0.5, saturation=0.5, hue=0.5)
+
         if self.to_torch:
             img = imutils.HWC_to_CHW(img)
 
@@ -159,10 +163,10 @@ class VOC12ClassificationDataset(VOC12ImageDataset):
 
     def __init__(self, img_name_list_path, voc12_root,
                  resize_long=None, rescale=None, img_normal=TorchvisionNormalize(), hor_flip=False,
-                 crop_size=None, crop_method=None):
+                 crop_size=None, crop_method=None, coljitter=False):
         super().__init__(img_name_list_path, voc12_root,
                  resize_long, rescale, img_normal, hor_flip,
-                 crop_size, crop_method)
+                 crop_size, crop_method, coljitter)
         self.label_list = load_image_label_list_from_npy(self.img_name_list)
 
     def __getitem__(self, idx):
@@ -271,4 +275,3 @@ class VOC12AffinityDataset(VOC12SegmentationDataset):
         out['aff_bg_pos_label'], out['aff_fg_pos_label'], out['aff_neg_label'] = self.extract_aff_lab_func(reduced_label)
 
         return out
-

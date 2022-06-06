@@ -1,22 +1,21 @@
 import torch.nn as nn
 import torch.nn.functional as F
 from misc import torchutils
-from net import resnet50
+from net import resnet101
+
 
 class Net(nn.Module):
 
     def __init__(self):
         super(Net, self).__init__()
-        # self.resnet50 = resnet50.resnet50(pretrained=True, strides=(2, 2, 2, 1))
-        self.resnet50 = resnet50.resnet101(pretrained=True, strides=(2, 2, 2, 1))
-        # self.resnet50 = resnet50.resnet152(pretrained=True, strides=(2, 2, 2, 1))
 
+        self.resnet101 = resnet101.resnet101(pretrained=True, strides=(2, 2, 2, 1))
 
-        self.stage1 = nn.Sequential(self.resnet50.conv1, self.resnet50.bn1, self.resnet50.relu, self.resnet50.maxpool,
-                                    self.resnet50.layer1)
-        self.stage2 = nn.Sequential(self.resnet50.layer2)
-        self.stage3 = nn.Sequential(self.resnet50.layer3)
-        self.stage4 = nn.Sequential(self.resnet50.layer4)
+        self.stage1 = nn.Sequential(self.resnet101.conv1, self.resnet101.bn1, self.resnet101.relu, self.resnet101.maxpool,
+                                    self.resnet101.layer1)
+        self.stage2 = nn.Sequential(self.resnet101.layer2)
+        self.stage3 = nn.Sequential(self.resnet101.layer3)
+        self.stage4 = nn.Sequential(self.resnet101.layer4)
 
         self.classifier = nn.Conv2d(2048, 20, 1, bias=False)
 
@@ -38,9 +37,9 @@ class Net(nn.Module):
         return x
 
     def train(self, mode=True):
-        for p in self.resnet50.conv1.parameters():
+        for p in self.resnet101.conv1.parameters():
             p.requires_grad = False
-        for p in self.resnet50.bn1.parameters():
+        for p in self.resnet101.bn1.parameters():
             p.requires_grad = False
 
     def trainable_parameters(self):
@@ -56,12 +55,16 @@ class CAM(Net):
     def forward(self, x):
 
         x = self.stage1(x)
+
         x = self.stage2(x)
+
         x = self.stage3(x)
+
         x = self.stage4(x)
 
         x = F.conv2d(x, self.classifier.weight)
         x = F.relu(x)
+
         x = x[0] + x[1].flip(-1)
 
         return x

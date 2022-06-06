@@ -1,22 +1,37 @@
+import math
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
 from misc import torchutils
-from net import resnet50
+import torch.utils.model_zoo as model_zoo
+from net import resnest269
+
+class FixedBatchNorm(nn.BatchNorm2d):
+    def forward(self, x):
+        return F.batch_norm(x, self.running_mean, self.running_var, self.weight, self.bias, training=False,
+                            eps=self.eps)
+
+def group_norm(features):
+    return nn.GroupNorm(4, features)
 
 class Net(nn.Module):
 
     def __init__(self):
-        super(Net, self).__init__()
-        # self.resnet50 = resnet50.resnet50(pretrained=True, strides=(2, 2, 2, 1))
-        self.resnet50 = resnet50.resnet101(pretrained=True, strides=(2, 2, 2, 1))
-        # self.resnet50 = resnet50.resnet152(pretrained=True, strides=(2, 2, 2, 1))
+        super().__init__()
 
+        self.resnest269 = resnest269.resnest50(pretrained=True)
+        #self.resnest269 = resnest269.resnest269(pretrained=True, strides=(2, 2, 2, 1))
 
-        self.stage1 = nn.Sequential(self.resnet50.conv1, self.resnet50.bn1, self.resnet50.relu, self.resnet50.maxpool,
-                                    self.resnet50.layer1)
-        self.stage2 = nn.Sequential(self.resnet50.layer2)
-        self.stage3 = nn.Sequential(self.resnet50.layer3)
-        self.stage4 = nn.Sequential(self.resnet50.layer4)
+        self.norm_fn = FixedBatchNorm
+
+        self.stage1 = nn.Sequential(self.resnest269.conv1,
+                                    self.resnest269.bn1,
+                                    self.resnest269.relu,
+                                    self.resnest269.maxpool, self.resnest269.layer1)
+        self.stage2 = nn.Sequential(self.resnest269.layer2)
+        self.stage3 = nn.Sequential(self.resnest269.layer3)
+        self.stage4 = nn.Sequential(self.resnest269.layer4)
 
         self.classifier = nn.Conv2d(2048, 20, 1, bias=False)
 
@@ -38,23 +53,19 @@ class Net(nn.Module):
         return x
 
     def train(self, mode=True):
-        for p in self.resnet50.conv1.parameters():
+        for p in self.resnest269.conv1.parameters():
             p.requires_grad = False
-        for p in self.resnet50.bn1.parameters():
+        for p in self.resnest269.bn1.parameters():
             p.requires_grad = False
 
     def trainable_parameters(self):
-
         return (list(self.backbone.parameters()), list(self.newly_added.parameters()))
 
-
 class CAM(Net):
-
     def __init__(self):
         super(CAM, self).__init__()
 
     def forward(self, x):
-
         x = self.stage1(x)
         x = self.stage2(x)
         x = self.stage3(x)
